@@ -1,0 +1,20 @@
+#!/bin/bash
+
+PIDFILE=/opt/ldm/ldmd.pid
+exit=0
+
+if [ -e $PIDFILE ]; then
+  PID=`/bin/cat $PIDFILE`
+  /bin/ps -p $PID > /dev/null
+  status=$?
+  if [ $status -ne 0 ]; then
+    echo "CRITICAL - LDM is not running"
+    exit=2
+  else
+    echo "OK - LDM is running. PID: $PID"
+  fi
+else 
+  echo "CRITICAL - NO LDM Process ID file found."
+  exit=2
+fi
+exit $exit
