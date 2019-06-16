@@ -1,0 +1,14 @@
+#!/bin/bash
+
+cp ./check_meminfo /usr/lib64/nagios/plugins/
+cp ./check_nfs_mounts.sh /usr/lib64/nagios/plugins/
+
+echo "" >> /etc/nagios/nrpe.cfg
+echo "# Memory Information" >> /etc/nagios/nrpe.cfg
+echo "command[check_meminfo_real]=/usr/lib64/nagios/plugins/check_meminfo -real" >> /etc/nagios/nrpe.cfg
+echo "command[check_meminfo_swap]=/usr/lib64/nagios/plugins/check_meminfo -swap" >> /etc/nagios/nrpe.cfg
+echo "command[check_meminfo_active]=/usr/lib64/nagios/plugins/check_meminfo -active" >> /etc/nagios/nrpe.cfg
+
+echo "" >> /etc/nagios/nrpe.cfg
+echo "# NFS Checks" >> /etc/nagios/nrpe.cfg
+echo "#command[check_nfs_<mntpnt]=/usr/lib64/nagios/plugins/check_nfs_mounts.sh -ro <path-to-mntpnt>" >> /etc/nagios/nrpe.cfg

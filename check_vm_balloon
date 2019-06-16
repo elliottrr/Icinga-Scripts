@@ -1,0 +1,36 @@
+#!/usr/bin/perl
+
+use strict;
+
+my $warn	= $ARGV[0];
+my $crit	= $ARGV[1];
+my $exit	= 0;
+my $status	= "OK";
+my $ballooncmd	= "/usr/bin/vmware-toolbox-cmd stat balloon";
+my $swapcmd	= "/usr/bin/vmware-toolbox-cmd stat swap";
+my $balloonamt	= `$ballooncmd`;
+my $swapamt	= `$swapcmd`;
+$balloonamt	=~ s/ MB\n//g;
+$swapamt	=~ s/ MB\n//g;
+
+my $memcmd	= "cat /proc/meminfo | /bin/grep MemTotal | /bin/awk '{ print \$2 }'";
+my $totalmem	= `$memcmd`;
+$totalmem	= $totalmem / 1024;
+
+my $pctbln	= ($balloonamt / $totalmem) * 100;
+$pctbln		= sprintf("%.0f", $pctbln);
+
+if ($balloonamt > $warn)
+{
+	$exit	= 1;
+	$status	= "WARNING";
+}
+if ($balloonamt > $crit)
+{
+	$exit	= 2;
+	$status	= "CRITICAL";
+}
+
+print "$status - $balloonamt MB in balloon driver: $pctbln % of total memory. (Host Swap: $swapamt MB)\n";
+
+exit($exit);

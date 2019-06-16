@@ -1,0 +1,106 @@
+#!/usr/bin/perl
+# This checks memory in a Nagios sort of way (to use through NRPE), but outputs in the format for MRTG
+
+my $filename = "/proc/meminfo";
+my @Lines;
+my $MemTotal;
+my $MemFree;
+my $MemUsed;
+my $MemActive;
+my $MemInactive;
+my $Buffers;
+my $Cached;
+my $SwapTotal;
+my $SwapFree;
+my $SwapUsed;
+
+# Get memory info
+open FILE, $filename or die $!;
+while (<FILE>) {
+	if (index($_, "MemTotal:") == 0) { $MemTotal = $_; }
+	if (index($_, "MemFree:") == 0) { $MemFree = $_; }
+	if (index($_, "Buffers:") == 0) { $Buffers = $_; }
+	if (index($_, "Cached:") == 0) { $Cached = $_; }
+	if (index($_, "SwapTotal:") == 0) { $SwapTotal = $_; }
+	if (index($_, "SwapFree:") == 0) { $SwapFree = $_; }
+	if (index($_, "Active:") == 0) { $MemActive = $_; }
+	if (index($_, "Inactive:") == 0) { $MemInactive = $_; }
+}
+
+# All sorts of nasty parsing: Remove label, Remove white space, Remove ' kB\n'
+@Lines = split(/:/, $MemTotal); 
+$MemTotal = $Lines[1];
+$MemTotal =~ s/^\s+//;
+$MemTotal =~ s/ kB\n//;
+@Lines = split(/:/, $MemFree); 
+$MemFree = $Lines[1];
+$MemFree =~ s/^\s+//;
+$MemFree =~ s/ kB\n//;
+@Lines = split(/:/, $Buffers); 
+$Buffers = $Lines[1];
+$Buffers =~ s/^\s+//;
+$Buffers =~ s/ kB\n//;
+@Lines = split(/:/, $Cached); 
+$Cached = $Lines[1];
+$Cached =~ s/^\s+//;
+$Cached =~ s/ kB\n//;
+@Lines = split(/:/, $SwapTotal); 
+$SwapTotal = $Lines[1];
+$SwapTotal =~ s/^\s+//;
+$SwapTotal =~ s/ kB\n//;
+@Lines = split(/:/, $SwapFree); 
+$SwapFree = $Lines[1];
+$SwapFree =~ s/^\s+//;
+$SwapFree =~ s/ kB\n//;
+@Lines = split(/:/, $MemActive);
+$MemActive = $Lines[1];
+$MemActive =~ s/^\s+//;
+$MemActive =~ s/ kB\n//;
+@Lines = split(/:/, $MemInactive);
+$MemInactive = $Lines[1];
+$MemInactive =~ s/^\s+//;
+$MemInactive =~ s/ kB\n//;
+
+# Calculate used memor and swap from total and free
+$MemUsed = $MemTotal - $MemFree;
+$SwapUsed = $SwapTotal - $SwapFree;
+
+# Print statements for testing. Too lazy to erase.
+#print "MemTotal: $MemTotal\n";
+#print "MemFree: $MemFree\n";
+#print "MemUsed: $MemUsed\n";
+#print "Buffers: $Buffers\n";
+#print "Cached: $Cached\n";
+#print "SwapTotal: $SwapTotal\n";
+#print "SwapFree: $SwapFree\n";
+#print "SwapUsed: $SwapUsed\n";
+#print "Active: $MemActive, Inactive: $MemIncative\n";
+
+if ($ARGV[0] eq "-real") { 
+	$MemUsed = $MemUsed * 1024;
+	$Cached = $Cached * 1024;
+	print "$MemUsed|$Cached|00:00:00|Real Memory Used, Cached Memory\n"; 
+}
+if ($ARGV[0] eq "-swap") { 
+	$SwapUsed = $SwapUsed * 1024;
+	$Buffers = $Buffers * 1024;
+	print "$SwapUsed|$Buffers|00:00:00|Swap Used, Disk Buffers\n"; 
+}
+if ($ARGV[0] eq "-active") {
+        $MemActive = $MemActive * 1024;
+        $MemInactive = $MemInactive * 1024;
+        print "$MemActive|$MemInactive|00:00:00|Active Memory, Inactive Memory\n";
+}
+if ($ARGV[0] eq "-nagios") { 
+	if ($MemFree > 102400) {
+		print "Memory OK: $MemFree kB Available\n";
+	} else {
+		print "Warning: Only $MemFree kB Available\n";
+	}
+}
+if ($ARGV[0] eq "") { 
+	print "Usage:\n  -real Gives real memory use in MRTG format\n";
+	print "  -swap Gives swap and buffer usage in MRTG format\n";
+	print "  -active Gives active/inactive usage in MRTG format\n";
+	print "  -nagios Gives output in a Nagios format (Doesn't work very well)\n\n";
+}
