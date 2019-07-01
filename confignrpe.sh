@@ -26,9 +26,9 @@ chcon system_u:object_r:nagios_unconfined_plugin_exec_t:s0 /usr/lib64/nagios/plu
 
 
 echo "Adding lines to /etc/nagios/nrpe..."
-sed -i 's/allowed_hosts=127.0.0.1/allowed_hosts=127.0.0.1,glados.services.ou.edu,chell.services.ou.edu/' /etc/nagios/nrpe.cfg
+sed -i 's/allowed_hosts=127.0.0.1/allowed_hosts=127.0.0.1,<icinga-host>/' /etc/nagios/nrpe.cfg
 sed -i 's/check_procs -w 150 -c 200/check_procs -w 500 -c 750/' /etc/nagios/nrpe.cfg
-#echo "allowed_hosts=127.0.0.1,glados.services.ou.edu,chell.services.ou.edu" >> /etc/nagios/nrpe.cfg
+#echo "allowed_hosts=127.0.0.1,<icinga-host>" >> /etc/nagios/nrpe.cfg
 echo "" >> /etc/nagios/nrpe.cfg
 echo "command[check_disk]=/usr/lib64/nagios/plugins/check_disk -w 10% -c 5% -X nfs -x /backup" >> /etc/nagios/nrpe.cfg
 echo "" >> /etc/nagios/nrpe.cfg
